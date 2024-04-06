@@ -122,6 +122,10 @@
                 border-width: 6px;
             }
         }
+        #camera-switch{
+            margin-top: 20px;
+            float: right;
+        }
     </style>
 </head>
 
@@ -129,44 +133,61 @@
     <div id="scanner-container">
         <video id="qr-canvas"></video>
     </div>
+        
+    <button id="camera-switch">Switch Camera</button>
 
     <!-- Loader element -->
     <div id="loader" class="loader"></div>
 
-    <script>
-        // Generate QR Code
-        var qrCode = new QRCode(document.getElementById("qr-canvas"), {
-            width: 300,
-            height: 300
-        });
+   <script>
+    // Generate QR Code
+    var qrCode = new QRCode(document.getElementById("qr-canvas"), {
+        width: 300,
+        height: 300
+    });
 
-        qrCode.makeCode("Scan here!");
+    qrCode.makeCode("Scan here!");
 
-        // QR Code Scanner
-        var scanner = new Instascan.Scanner({ video: document.getElementById('qr-canvas') });
-        scanner.addListener('scan', function (content) {
-            scanner.stop();
-            document.getElementById('loader').style.display = 'block';
+    // QR Code Scanner
+    var scanner = new Instascan.Scanner({ video: document.getElementById('qr-canvas') });
+    scanner.addListener('scan', function (content) {
+        scanner.stop();
+        document.getElementById('loader').style.display = 'block';
 
-            setTimeout(function () {
-                window.location.href = 'informationScan.html?data=' + encodeURIComponent(content);
-            }, 5000); // Redirect after 5 seconds
-        });
+        setTimeout(function () {
+            window.location.href = 'informationScan.html?data=' + encodeURIComponent(content);
+        }, 5000); // Redirect after 5 seconds
+    });
 
-        Instascan.Camera.getCameras().then(function (cameras) {
-            if (cameras.length > 0) {
-                scanner.start(cameras[0]);
-                // Add scanning effect
-                document.getElementById('qr-canvas').classList.add('scanning');
-            } else {
-                console.error('No cameras found.');
-                alert('No cameras found.');
+    Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+            // Check if the browser is Safari on iOS
+            var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (iOS) {
+                alert("To use the camera, please allow camera access in your browser settings.");
             }
-        }).catch(function (e) {
-            console.error(e);
-            alert(e);
-        });
-    </script>
+            scanner.start(cameras[0]);
+            // Add scanning effect
+            document.getElementById('qr-canvas').classList.add('scanning');
+        } else {
+            console.error('No cameras found.');
+            alert('No cameras found.');
+        }
+    }).catch(function (e) {
+        console.error(e);
+        alert(e);
+    });
+
+    // Switch Camera button
+    var cameras = [];
+    var currentCameraIndex = 0;
+    document.getElementById('camera-switch').addEventListener('click', function () {
+        currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+        scanner.stop();
+        scanner.start(cameras[currentCameraIndex]);
+    });
+</script>
+
 </body>
 
 </html>
